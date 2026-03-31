@@ -167,12 +167,28 @@ const data = {
     },
     {
       category: "music",
+      epg_id: "music_on_tv",
+      name: "MNET",
+      icon: "https://i.ibb.co/mFd4HS7T/mnet.png",
+      url: "https://nl.utako.moe/mnet/index.m3u8"
+    },
+    {
+      category: "music",
       epg_id: "Music.Dummy.us",
       name: "Hallypop",
       icon: "https://i.ibb.co/9k9D8bNm/hallypop.png",
       drm_type: "clearkey",
       drm_key: "",
       url: "http://136.239.173.26:6610/001/2/ch00000090990000001152/manifest.mpd?AuthInfo=v87HD9rEhwHiAdYyrP20Tg5pgSMSITY%2FHYvvCWJRp%2BrQQqEzMGzqacd7xs%2FVYEXbytokK1MIobcue1ImXa0ZEA%3D%3D&version=v1.0&BreakPoint=0&virtualDomain=001.live_hls.zte.com&programid=ch00000000000000001373&contentid=ch00000000000000001373&videoid=ch00000090990000001152&recommendtype=0&userid=1181864451786&boid=001&stbid=02%3A00%3A00%3A00%3A00%3A00&terminalflag=1&profilecode=&usersessionid=9VC3RX5W7QLXXX&NeedJITP=1&JITPMediaType=DASH&JITPDRMType=NO"
+    },
+    {
+      category: "hbo",
+      epg_id: "",
+      name: "HBO",
+      icon: "https://i.ibb.co/hR25nq8y/hbo.png",
+      drm_type: "clearkey",
+      drm_key: "",
+      url: "http://136.239.158.10:6610/001/2/ch00000090990000001065/manifest.mpd?AuthInfo=v87HD9rEhwHiAdYyrP20Tg5pgSMSITY%2FHYvvCWJRp%2BosKg8aLji3LHWqHUI%2FwQyJytokK1MIobcue1ImXa0ZEA%3D%3D&version=v1.0&BreakPoint=0&virtualDomain=001.live_hls.zte.com&programid=ch00000000000000001085&contentid=ch00000000000000001085&videoid=ch00000090990000001065&recommendtype=0&userid=1362658369654&boid=001&stbid=02%3A00%3A00%3A00%3A00%3A00&terminalflag=1&profilecode=&usersessionid=UVJL5F87UVBXXX&NeedJITP=1&JITPMediaType=DASH&JITPDRMType=NO"
     },
   ]
 };
