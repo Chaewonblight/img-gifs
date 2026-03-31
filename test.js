@@ -160,6 +160,13 @@ const data = {
     },
     {
       category: "music",
+      epg_id: "music_on_tv",
+      name: "Music ON TV",
+      icon: "https://i.ibb.co/zcvZBQ9/musicontv.png",
+      url: "https://nl.utako.moe/musicon/index.m3u8"
+    },
+    {
+      category: "music",
       epg_id: "Music.Dummy.us",
       name: "Hallypop",
       icon: "https://i.ibb.co/9k9D8bNm/hallypop.png",
