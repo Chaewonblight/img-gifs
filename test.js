@@ -34,73 +34,89 @@ async function handleRequest(request) {
     }
   }
 
-  // 🔐 PLAYLIST
-  if (pathname === '/playlist.m3u8') {
-    const accessKey = url.searchParams.get('key');
-    const auth = url.searchParams.get('auth');
+if (pathname === '/playlist.m3u8') {
+  const accessKey = url.searchParams.get('key');
+  const auth = url.searchParams.get('auth');
 
-    const accept = (request.headers.get('accept') || '').toLowerCase();
-    
-     // Detect real browser download/open
-    const isBrowser =
-      userAgent.includes('mozilla') &&
-      (accept.includes('text/html') || accept.includes('application/xhtml+xml'));
-    
-    const isAuthorized =
-      accessKey === 'bastikwang123' &&
-      auth === 'iptv-client' &&
-      !isBrowser;
+  const accept = (request.headers.get('accept') || '').toLowerCase();
+  const range = request.headers.get('range');
+  const secFetchDest = request.headers.get('sec-fetch-dest') || '';
 
-    // ✅ REAL PLAYLIST
-    let m3u = `#EXTM3U x-tvg-url="${data.provider.epg}"\n`;
+  // 🔐 Detect browser/download
+  const isBrowser =
+    userAgent.includes('mozilla') &&
+    (accept.includes('text/html') || secFetchDest === 'document');
 
-    data.channels.forEach(channel => {
-      const group = data.categories[channel.category]?.name || 'Other';
-      m3u += `#EXTINF:-1 tvg-id="${channel.epg_id || ''}" tvg-logo="${channel.icon || ''}" group-title="${group}",${channel.name}\n`;
+  // 🔥 Detect download tools (many use range or no proper headers)
+  const isSuspiciousDownload =
+    range !== null || accept === '' || accept.includes('application/octet-stream');
 
-      if (channel.url.includes('.mpd') && channel.drm_type === 'clearkey') {
-        const [kid, key] = channel.drm_key.split(':');
-        
-        // Ensure keys exist before trying to process
-        if (kid && key) {
-          const kid_b64 = hexToB64(kid);
-          const key_b64 = hexToB64(key);
+  const isAuthorized =
+    accessKey === 'bastikwang123' &&
+    auth === 'iptv-client' &&
+    !isBrowser &&
+    !isSuspiciousDownload;
 
-          // Standard Kodi / IPTV Property Headers
-          m3u += `#KODIPROP:inputstream.adaptive.manifest_type=mpd\n`;
-          m3u += `#KODIPROP:inputstream.adaptive.license_type=clearkey\n`;
-          m3u += `#KODIPROP:inputstream.adaptive.license_key=${kid}:${key}\n`;
-
-          const clearkeyJson = JSON.stringify({
-            keys: [{ kty: "oct", k: key_b64, kid: kid_b64 }]
-          });
-
-          m3u += `#EXTVLCOPT:license-type=clearkey\n`;
-          m3u += `#EXTVLCOPT:license-key=${clearkeyJson}\n`;
-        }
-      }
-
-      if (channel.headers) {
-        Object.entries(channel.headers).forEach(([k, v]) => {
-          m3u += `#EXTVLCOPT:http-${k.toLowerCase()}=${v}\n`;
-          if (k.toLowerCase() === 'user-agent') {
-            m3u += `#EXTHTTP:{"User-Agent":"${v}"}\n`;
-          }
-        });
-      }
-
-      m3u += `${channel.url}\n`;
-    });
-
-    return new Response(m3u, {
+  // ❌ ACCESS DENIED
+  if (!isAuthorized) {
+    return new Response(`#EXTM3U\n#EXTINF:-1,Access Denied\n`, {
       status: 200,
       headers: {
         'Content-Type': 'application/vnd.apple.mpegurl',
-        'Access-Control-Allow-Origin': '*',
-        'Cache-Control': 'no-cache, no-store'
+        'Cache-Control': 'no-store'
       }
     });
   }
+
+  // ✅ REAL PLAYLIST (unchanged)
+  let m3u = `#EXTM3U x-tvg-url="${data.provider.epg}"\n`;
+
+  data.channels.forEach(channel => {
+    const group = data.categories[channel.category]?.name || 'Other';
+    m3u += `#EXTINF:-1 tvg-id="${channel.epg_id || ''}" tvg-logo="${channel.icon || ''}" group-title="${group}",${channel.name}\n`;
+
+    if (channel.url.includes('.mpd') && channel.drm_type === 'clearkey') {
+      const [kid, key] = channel.drm_key.split(':');
+
+      if (kid && key) {
+        const kid_b64 = hexToB64(kid);
+        const key_b64 = hexToB64(key);
+
+        m3u += `#KODIPROP:inputstream.adaptive.manifest_type=mpd\n`;
+        m3u += `#KODIPROP:inputstream.adaptive.license_type=clearkey\n`;
+        m3u += `#KODIPROP:inputstream.adaptive.license_key=${kid}:${key}\n`;
+
+        const clearkeyJson = JSON.stringify({
+          keys: [{ kty: "oct", k: key_b64, kid: kid_b64 }]
+        });
+
+        m3u += `#EXTVLCOPT:license-type=clearkey\n`;
+        m3u += `#EXTVLCOPT:license-key=${clearkeyJson}\n`;
+      }
+    }
+
+    if (channel.headers) {
+      Object.entries(channel.headers).forEach(([k, v]) => {
+        m3u += `#EXTVLCOPT:http-${k.toLowerCase()}=${v}\n`;
+
+        if (k.toLowerCase() === 'user-agent') {
+          m3u += `#EXTHTTP:{"User-Agent":"${v}"}\n`;
+        }
+      });
+    }
+
+    m3u += `${channel.url}\n`;
+  });
+
+  return new Response(m3u, {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/vnd.apple.mpegurl',
+      'Access-Control-Allow-Origin': '*',
+      'Cache-Control': 'no-cache, no-store'
+    }
+  });
+}
 
   return new Response("Not Found", { status: 404 });
 }
